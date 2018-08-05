@@ -1,3 +1,3 @@
-cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_NAME=Windows
+cmake ../ -DCMAKE_BUILD_TYPE=Release
 make
 make install

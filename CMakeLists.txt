@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
 project(gldemo CXX)
 set(DIR_SRC "${PROJECT_SOURCE_DIR}/src")
 set(DIR_INC "${PROJECT_SOURCE_DIR}/inc")
+set(DIR_LIB "${PROJECT_SOURCE_DIR}/lib/${CMAKE_C_COMPILER}")
 set(DIR_DTA_NAME "glsl")
 set(DIR_DTA "${PROJECT_SOURCE_DIR}/${DIR_DTA_NAME}")
 set(DIR_BIN "${PROJECT_SOURCE_DIR}/bin/${CMAKE_PROJECT_NAME}.${CMAKE_SYSTEM_NAME}.${CMAKE_GENERATOR}")
@@ -42,14 +43,23 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT g
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 # Add to-be-linked dependencies
-find_package(glfw3 3.2 REQUIRED)
 find_package(OpenGL REQUIRED)
 target_include_directories(gldemo PUBLIC "${OPENGL_INCLUDE_DIR}")
 target_include_directories(gldemo PUBLIC "${DIR_INC}")
-target_link_libraries(gldemo PUBLIC
-  ${OPENGL_gl_LIBRARY}
-  glfw
-)
+
+if (NOT MINGW)
+  find_package(glfw3 3.2 REQUIRED)
+  target_link_libraries(gldemo PUBLIC
+    ${OPENGL_gl_LIBRARY}
+    glfw
+  )
+else()
+  set(GLFW_LIBRARIES ${GLFW_LIBRARIES} "${DIR_LIB}/libglfw3.a")
+  target_link_libraries(gldemo PUBLIC
+    ${OPENGL_gl_LIBRARY}
+    ${GLFW_LIBRARIES}
+  )
+endif()
 
 # Setup linker flags
 target_link_libraries(gldemo PUBLIC
@@ -60,6 +70,16 @@ target_link_libraries(gldemo PUBLIC
   -static-libgcc
   -static-libstdc++
 )
+
+if (MINGW)
+  message(STATUS "MinGW detected! Linker flags set.")
+
+  target_link_libraries(gldemo PUBLIC
+    -lmingw32
+    -mconsole
+    -static
+  )
+endif()
 
 # Set project build config
 add_custom_command(
@@ -73,13 +93,11 @@ add_custom_command(
 message(STATUS "Target GENERATOR: ${CMAKE_GENERATOR}")
 message(STATUS "OPENGL_INCLUDE_DIR: ${OPENGL_INCLUDE_DIR}")
 message(STATUS "OPENGL_gl_LIBRARY: ${OPENGL_gl_LIBRARY}")
+message(STATUS "GLFW_LIBRARIES: ${GLFW_LIBRARIES}")
 
 # Set project install config
 install(TARGETS gldemo DESTINATION ${DIR_BIN})
 install(DIRECTORY ${DIR_DTA} DESTINATION ${DIR_BIN})
-if (MSVC)
-  install(DIRECTORY ${DIR_LIB}/ DESTINATION ${DIR_BIN})
-endif()
 
 # Set project package(s)
 set(CPACK_PACKAGE_NAME "gldemo")

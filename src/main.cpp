@@ -4,6 +4,8 @@
 #include <sys/time.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 
 // ############################################################################
 // ## OpenGL Shader funcs
@@ -182,6 +184,28 @@ int main(int argc, char * argv[])
 
     printf("main:: OpenGL version major: %d, minor: %d\n", GLVersion.major, GLVersion.minor);
 
+    // init SDL2 & SDL2 Mixer
+	int sdl2init = SDL_Init(SDL_INIT_AUDIO);
+
+	if (sdl2init != 0)
+	{
+        printf("main:: SDL_Init failed!\n");
+        return -1;
+	}
+
+    int sdl2mixerinit = Mix_Init(MIX_INIT_OGG);
+
+    /*if (sdl2mixerinit != MIX_INIT_OGG)
+    {
+        printf("main:: Mix_Init failed! Result: %d, Error: %s\n", sdl2mixerinit,  Mix_GetError());
+        return -1;
+    }*/
+
+    // load main music file(s)
+    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096);
+    Mix_VolumeMusic(32);
+    Mix_Music * music = Mix_LoadMUS("./data/demo.ogg");
+
     // create main shader program
     GLuint program = glCreateProgram();
 
@@ -192,9 +216,9 @@ int main(int argc, char * argv[])
     }
 
     // load geometry, vertex and fragment shaders into our program
-    std::string shader_g_fs_quad = shader_load("./glsl/g.fs_quad.glsl");
-    std::string shader_v_fs_quad = shader_load("./glsl/v.fs_quad.glsl");
-    std::string shader_f_demo = shader_load("./glsl/f.demo.glsl");
+    std::string shader_g_fs_quad = shader_load("./data/g.fs_quad.glsl");
+    std::string shader_v_fs_quad = shader_load("./data/v.fs_quad.glsl");
+    std::string shader_f_demo = shader_load("./data/f.demo.glsl");
 
     shader_attach(program, shader_g_fs_quad.c_str(), GL_GEOMETRY_SHADER);
     shader_attach(program, shader_v_fs_quad.c_str(), GL_VERTEX_SHADER);
@@ -202,8 +226,11 @@ int main(int argc, char * argv[])
     shader_link(program);
     shader_validate(program);
 
+    // play music
+    Mix_PlayMusic(music, 1);
+
     GLfloat iTime = 0.0f;
-    float delta_time = 1.0f / 144.0f;
+    float delta_time = 1.0f / 60.0f;
     while (!glfwWindowShouldClose(window))
     {
         // frame start time
@@ -242,10 +269,14 @@ int main(int argc, char * argv[])
 
         glfwSwapBuffers(window);
         glfwPollEvents();
-        //fflush(stdout);
+
+        printf("%.5f\n", iTime);
+        fflush(stdout);
     }
 
-    // Terminate glfw3
+    // Free resources
+    Mix_FreeMusic(music);
+    SDL_Quit();
     glfwTerminate();
 
     return 0;

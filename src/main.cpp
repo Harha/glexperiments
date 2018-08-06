@@ -195,6 +195,7 @@ int main(int argc, char * argv[])
 
     int sdl2mixerinit = Mix_Init(MIX_INIT_OGG);
 
+    // bug in SDL2_Mixer, etc. Mix_Init returns wrong values.
     /*if (sdl2mixerinit != MIX_INIT_OGG)
     {
         printf("main:: Mix_Init failed! Result: %d, Error: %s\n", sdl2mixerinit,  Mix_GetError());

@@ -48,8 +48,8 @@ void main()
 	if (in_circle)
 	{
 		uv /= iResolution.xy;
-		uv.x *= iResolution.x / iResolution.y;
 		uv = uv * 2.0 - 1.0;
+		uv.x *= iResolution.x / iResolution.y;
 
 		vec3 r = normalize(vec3(uv, 1.0));
 		
